@@ -1,0 +1,8 @@
+# Node modules
+node_modules/
+
+# SQLite database
+database/tasks.db
+
+# VS Code settings
+.vscode/
