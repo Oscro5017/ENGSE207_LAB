@@ -5,79 +5,162 @@ const path = require('path');
 const app = express();
 const PORT = 3000;
 
-// Middleware
 app.use(express.json());
 app.use(express.static('public'));
 
-// Database
 const db = new sqlite3.Database('./database/tasks.db', (err) => {
-    if (err) console.error('DB Error:', err);
-    else console.log('✅ Database connected');
+    if (err) {
+        console.error('❌ Error connecting to database:', err.message);
+    } else {
+        console.log('✅ Connected to SQLite database');
+    }
 });
 
-// ROUTES
-
-// GET all tasks
 app.get('/api/tasks', (req, res) => {
-    db.all('SELECT * FROM tasks ORDER BY created_at DESC', [], (err, rows) => {
-        if (err) return res.status(500).json({ error: err.message });
-        res.json({ success: true, data: rows });
+    const sql = 'SELECT * FROM tasks ORDER BY created_at DESC';
+
+    db.all(sql, [], (err, rows) => {
+        if (err) {
+            console.error('Error fetching tasks:', err.message);
+            res.status(500).json({ error: 'Failed to fetch tasks' });
+        } else {
+            res.json({ tasks: rows });
+        }
     });
 });
 
-// GET single task
 app.get('/api/tasks/:id', (req, res) => {
-    db.get('SELECT * FROM tasks WHERE id = ?', [req.params.id], (err, row) => {
-        if (err) return res.status(500).json({ error: err.message });
-        if (!row) return res.status(404).json({ error: 'Not found' });
-        res.json({ success: true, data: row });
+    const sql = 'SELECT * FROM tasks WHERE id = ?';
+
+    db.get(sql, [req.params.id], (err, row) => {
+        if (err) {
+            return res.status(500).json({ error: 'Failed to fetch task' });
+        }
+        if (!row) {
+            return res.status(404).json({ error: 'Task not found' });
+        }
+        res.json(row);
     });
 });
 
-// CREATE task
 app.post('/api/tasks', (req, res) => {
-    const { title, description, status, priority } = req.body;
-    if (!title) return res.status(400).json({ error: 'Title required' });
-    
-    const sql = 'INSERT INTO tasks (title, description, status, priority) VALUES (?, ?, ?, ?)';
-    db.run(sql, [title, description || null, status || 'TODO', priority || 'MEDIUM'], function(err) {
-        if (err) return res.status(500).json({ error: err.message });
-        db.get('SELECT * FROM tasks WHERE id = ?', [this.lastID], (err, row) => {
-            res.status(201).json({ success: true, data: row });
+    const { title, description, priority } = req.body;
+
+    if (!title || title.trim() === '') {
+        return res.status(400).json({ error: 'Title is required' });
+    }
+
+    const sql = `
+        INSERT INTO tasks (title, description, status, priority)
+        VALUES (?, ?, 'TODO', ?)
+    `;
+
+    db.run(sql, [title, description || '', priority || 'MEDIUM'], function (err) {
+        if (err) {
+            return res.status(500).json({ error: 'Failed to create task' });
+        }
+        res.status(201).json({
+            message: 'Task created',
+            taskId: this.lastID
         });
     });
 });
 
-// UPDATE task
 app.put('/api/tasks/:id', (req, res) => {
+    const { id } = req.params;
     const { title, description, status, priority } = req.body;
-    const sql = `UPDATE tasks SET 
-        title = COALESCE(?, title),
-        description = COALESCE(?, description),
-        status = COALESCE(?, status),
-        priority = COALESCE(?, priority),
-        updated_at = CURRENT_TIMESTAMP
-        WHERE id = ?`;
-    
-    db.run(sql, [title, description, status, priority, req.params.id], function(err) {
-        if (err) return res.status(500).json({ error: err.message });
-        if (this.changes === 0) return res.status(404).json({ error: 'Not found' });
-        db.get('SELECT * FROM tasks WHERE id = ?', [req.params.id], (err, row) => {
-            res.json({ success: true, data: row });
-        });
+
+    const updates = [];
+    const values = [];
+
+    if (title !== undefined) {
+        updates.push('title = ?');
+        values.push(title);
+    }
+    if (description !== undefined) {
+        updates.push('description = ?');
+        values.push(description);
+    }
+    if (status !== undefined) {
+        updates.push('status = ?');
+        values.push(status);
+    }
+    if (priority !== undefined) {
+        updates.push('priority = ?');
+        values.push(priority);
+    }
+
+    if (updates.length === 0) {
+        return res.status(400).json({ error: 'No fields to update' });
+    }
+
+    const sql = `UPDATE tasks SET ${updates.join(', ')} WHERE id = ?`;
+    values.push(id);
+
+    db.run(sql, values, function (err) {
+        if (err) {
+            return res.status(500).json({ error: 'Failed to update task' });
+        }
+        if (this.changes === 0) {
+            return res.status(404).json({ error: 'Task not found' });
+        }
+        res.json({ message: 'Task updated' });
     });
 });
 
-// DELETE task
 app.delete('/api/tasks/:id', (req, res) => {
-    db.run('DELETE FROM tasks WHERE id = ?', [req.params.id], function(err) {
-        if (err) return res.status(500).json({ error: err.message });
-        if (this.changes === 0) return res.status(404).json({ error: 'Not found' });
-        res.json({ success: true });
+    const sql = 'DELETE FROM tasks WHERE id = ?';
+
+    db.run(sql, [req.params.id], function (err) {
+        if (err) {
+            return res.status(500).json({ error: 'Failed to delete task' });
+        }
+        if (this.changes === 0) {
+            return res.status(404).json({ error: 'Task not found' });
+        }
+        res.json({ message: 'Task deleted' });
     });
 });
 
-// Start server
+app.patch('/api/tasks/:id/status', (req, res) => {
+    const { status } = req.body;
+    const valid = ['TODO', 'IN_PROGRESS', 'DONE'];
+
+    if (!valid.includes(status)) {
+        return res.status(400).json({ error: 'Invalid status' });
+    }
+
+    const sql = 'UPDATE tasks SET status = ? WHERE id = ?';
+
+    db.run(sql, [status, req.params.id], function (err) {
+        if (err) {
+            return res.status(500).json({ error: 'Failed to update status' });
+        }
+        if (this.changes === 0) {
+            return res.status(404).json({ error: 'Task not found' });
+        }
+        res.json({ message: 'Status updated' });
+    });
+});
+
+app.get('/', (req, res) => {
+    res.sendFile(path.join(__dirname, 'public', 'index.html'));
+});
+
 app.listen(PORT, () => {
-    console.log(`🚀 Server running at http://localhost:${PORT}`);
+    console.log(`🚀 Server running on http://localhost:${PORT}`);
+    console.log(`📝 Task Board application started`);
+    console.log(`📊 Architecture: Monolithic`);
+});
+
+process.on('SIGINT', () => {
+    console.log('\n⚠️ Shutting down server...');
+    db.close((err) => {
+        if (err) {
+            console.error('Error closing database:', err.message);
+        } else {
+            console.log('✅ Database connection closed');
+        }
+        process.exit(0);
+    });
 });
