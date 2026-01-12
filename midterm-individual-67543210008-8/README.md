@@ -1,46 +1,125 @@
-# 💻 ENGSE207 Software Architecture - MIDTERM PRACTICAL EXAM (Individual)
-## ข้อสอบปฏิบัติเดี่ยว - Version 1
+# Library Management System - Layered Architecture
 
----
+## 📋 Project Information
+- **Student Name:** ณัฐพงศ์ จินะปัญญา
+- **Student ID:** 67543210008-8
+- **Course:** ENGSE207 Software Architecture
 
-### 📋 ข้อมูลการสอบ
-- **รหัสวิชา:** ENGSE207
-- **ชื่อวิชา:** สถาปัตยกรรมซอฟต์แวร์ (Software Architecture)
-- **ประเภทข้อสอบ:** ปฏิบัติเดี่ยว (Individual Practical)
-- **เวลาที่ใช้:** 180 นาที (3 ชั่วโมง)
-- **คะแนนเต็ม:** 15 คะแนน
-- **รูปแบบ:** Open Book, Open Internet, Open AI
+## 🏗️ Architecture Style
+Layered Architecture (3-tier)
 
----
+## 📂 Project Structure
+```
+midterm-individual-67543210008-8/
+├──layered-library/
+|   ├── public/
+│   |       ├── index.html
+│   |       ├── css/
+│   |       │   └── style.css
+│   |       └── js/
+│   |           ├── api.js
+│   |           └── app.js
+|   |
+│   ├── src/
+│   │   ├── presentation/
+│   │   │   ├── routes/
+│   │   │   │   └── bookRoutes.js
+│   │   │   ├── controllers/
+│   │   │   │   └── bookController.js
+│   │   │   └── middlewares/
+│   │   │       └── errorHandler.js
+│   │   │
+│   │   ├── business/
+│   │   │   ├── services/
+│   │   │   │   └── bookService.js
+│   │   │   └── validators/
+│   │   │       └── bookValidator.js
+│   │   │
+│   │   └── data/
+│   │       ├── repositories/
+│   │       │   └── bookRepository.js
+│   │       └── database/
+│   │           └── connection.js
+│   │
+│   ├── server.js
+│   ├── package.json
+│   ├── library.db
+│   └── README.md
+|
+└── monolithic-library/
+    │
+    ├── server.js
+    ├── package.json
+    ├── library.db
+    └── public/
+        └── index.html
+```
 
-### 👤 ข้อมูลนักศึกษา
+## 🎯 Refactoring Summary
 
-**ชื่อ-นามสกุล:** 
-ณัฐพงศ์ จินะปัญญา
+### ปัญหาของ Monolithic (เดิม):
+- โค้ดทั้งหมดอยู่ในไฟล์เดียว ทำให้ไฟล์มีขนาดใหญ่และอ่านยาก
 
-**รหัสนักศึกษา:** 
-67543210008-8
+- Business Logic ปนกับ HTTP handling และ Data access
 
-**หมู่เรียน:** 
-SEC-1
+- แก้ไขโค้ดส่วนหนึ่งอาจกระทบส่วนอื่นโดยไม่ตั้งใจ
+ 
+- ยากต่อการแบ่งงานให้ทีมพัฒนา
 
----
+- ไม่รองรับการขยายระบบในอนาคต
 
-## 📌 สถานการณ์โจทย์
+### วิธีแก้ไขด้วย Layered Architecture:
+- แยก Controller ออกมารับผิดชอบเฉพาะ HTTP Request/Response
 
-บริษัท TechStartup มีระบบ **Library Management System (ระบบจัดการห้องสมุด)** แบบ Monolithic ที่กำลังเริ่มมีปัญหา:
+- ย้าย Business Logic ทั้งหมดไปไว้ใน Service Layer
 
-### 🔴 ปัญหาปัจจุบัน:
+- ยกการติดต่อฐานข้อมูลไปไว้ใน Repository Layer
 
-1. **Code ยุ่งเหยิง** - โค้ดทั้งหมดอยู่ในไฟล์เดียว (server.js) มากกว่า 400 บรรทัด
-2. **ยากต่อการบำรุงรักษา** - แก้โค้ดส่วนหนึ่ง ต้องระวังไม่ให้กระทบส่วนอื่น
-3. **ทำงานร่วมกันยาก** - Developer หลายคนแก้ไฟล์เดียวกัน เกิด conflict บ่อย
-4. **ไม่มี Separation of Concerns** - Business logic ปนกับ Data access ปนกับ HTTP handling
+- เพิ่ม Validator เพื่อจัดการ validation แยกจาก business logic
 
-### 🎯 เป้าหมาย:
+- แต่ละ layer ติดต่อกันผ่าน method call เท่านั้น ไม่ข้าม layer
 
-คุณได้รับมอบหมายให้ **Refactor** ระบบจาก **Monolithic** เป็น **Layered Architecture (3-tier)** เพื่อ:
-- ✅ แยก Concerns ชัดเจน (Presentation, Business, Data)
-- ✅ ง่ายต่อการบำรุงรักษา
-- ✅ ทีมสามารถทำงานแยกกันได้ (แต่ละ layer)
-- ✅ เตรียมพร้อมสำหรับการขยายระบบในอนาคต
+### ประโยชน์ที่ได้รับ:
+- โค้ดอ่านง่าย และเข้าใจโครงสร้างระบบได้ชัดเจน
+
+- แก้ไขหรือเพิ่มฟีเจอร์ได้ง่ายขึ้น
+
+- ลดความเสี่ยงในการเกิด bug จากการแก้ไขโค้ด
+
+- รองรับการทำงานเป็นทีมได้ดี
+
+- สามารถต่อยอดไปสู่ Microservices ในอนาคตได้
+
+## 🚀 How to Run
+
+```
+git clone https://github.com/Oscro5017/ENGSE207_LAB.git
+
+cd /engse207-labs/midterm-individual-67543210008-8/layered-library
+
+npm install
+
+npm start
+
+# Open browser: http://localhost:3000
+```
+
+## 📝 API Endpoints
+
+## 📘 Book Management
+
+| Method | Endpoint                  | Description             |
+| ------ | ------------------------- | ----------------------- |
+| GET    | `/books`                  | ดึงข้อมูลหนังสือทั้งหมด |
+| GET    | `/books?status=available` | ดึงหนังสือตามสถานะ      |
+| GET    | `/books/:id`              | ดึงข้อมูลหนังสือตาม ID  |
+| POST   | `/books`                  | เพิ่มหนังสือใหม่        |
+| PUT    | `/books/:id`              | แก้ไขข้อมูลหนังสือ      |
+| DELETE | `/books/:id`              | ลบหนังสือ               |
+
+## 🔄 Book Status
+
+| Method | Endpoint            | Description |
+| ------ | ------------------- | ----------- |
+| POST   | `/books/:id/borrow` | ยืมหนังสือ  |
+| POST   | `/books/:id/return` | คืนหนังสือ  |
