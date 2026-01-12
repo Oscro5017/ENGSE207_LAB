@@ -1,12 +1,28 @@
 function errorHandler(err, req, res, next) {
     console.error('Error:', err.message);
-    
-    // TODO: Handle different error types
-    // - ValidationError → 400
-    // - NotFoundError → 404
-    // - ConflictError → 409
-    // - Default → 500
-    
+
+    // Validation Error
+    if (err.name === 'ValidationError') {
+        return res.status(400).json({
+            error: err.message
+        });
+    }
+
+    // Not Found Error
+    if (err.name === 'NotFoundError') {
+        return res.status(404).json({
+            error: err.message
+        });
+    }
+
+    // Conflict Error
+    if (err.name === 'ConflictError') {
+        return res.status(409).json({
+            error: err.message
+        });
+    }
+
+    // Default / Unknown Error
     res.status(500).json({
         error: err.message || 'Internal server error'
     });
