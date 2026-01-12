@@ -1,30 +1,18 @@
 function errorHandler(err, req, res, next) {
-    console.error('Error:', err.message);
+    console.error(err.message);
 
-    // Validation Error
-    if (err.name === 'ValidationError') {
-        return res.status(400).json({
-            error: err.message
-        });
+    let statusCode = 500;
+
+    if (err.message.includes('Invalid') || err.message.includes('required')) {
+        statusCode = 400;
+    } else if (err.message.includes('not found')) {
+        statusCode = 404;
+    } else if (err.message.includes('exists')) {
+        statusCode = 409;
     }
 
-    // Not Found Error
-    if (err.name === 'NotFoundError') {
-        return res.status(404).json({
-            error: err.message
-        });
-    }
-
-    // Conflict Error
-    if (err.name === 'ConflictError') {
-        return res.status(409).json({
-            error: err.message
-        });
-    }
-
-    // Default / Unknown Error
-    res.status(500).json({
-        error: err.message || 'Internal server error'
+    res.status(statusCode).json({
+        error: err.message
     });
 }
 

@@ -52,9 +52,32 @@ class BookRepository {
 
     // TODO: Implement update
     async update(id, bookData) {
-        // ให้นักศึกษาเขียนเอง
-        // return Promise
-    }
+    const { title, author, isbn } = bookData;
+
+    return new Promise((resolve, reject) => {
+        const sql = `
+            UPDATE books
+            SET title = ?, author = ?, isbn = ?
+            WHERE id = ?
+        `;
+
+        db.run(sql, [title, author, isbn, id], function (err) {
+            if (err) {
+                reject(err);
+            } else {
+                db.get(
+                    'SELECT * FROM books WHERE id = ?',
+                    [id],
+                    (err, row) => {
+                        if (err) reject(err);
+                        else resolve(row);
+                    }
+                );
+            }
+        });
+    });
+}
+
 
     // TODO: Implement updateStatus
     async updateStatus(id, status) {
