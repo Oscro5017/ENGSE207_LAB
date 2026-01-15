@@ -141,7 +141,7 @@ class LibraryAPI {
 }
 
 // 🆕 สำคัญ! เปลี่ยน URL ตาม environment
-const API_BASE_URL = 'http://172.26.192.162:3000/api';  // Backend server
+const API_BASE_URL = 'http://192.168.56.103:3000/api';  // Backend server
 // const API_BASE_URL = 'http://<VM-IP>:3000/api';  // Production (ใช้ IP ของ VM)
 
 const api = new LibraryAPI(API_BASE_URL);

@@ -2,19 +2,19 @@
 
 ## Base URL
 ```
-http://localhost:3000/api
+http://192.168.56.103:3000/api
 ```
 
 ## Endpoints
 
 ### 1. Get All Books
 ```bash
-curl http://localhost:3000/api/books
+curl http://192.168.56.103:3000/api/books
 ```
 
 ### 2. Create Book
 ```bash
-curl -X POST http://localhost:3000/api/books \
+curl -X POST http://192.168.56.103:3000/api/books \
   -H "Content-Type: application/json" \
   -d '{
     "title": "Clean Code",
@@ -25,15 +25,15 @@ curl -X POST http://localhost:3000/api/books \
 
 ### 3. Borrow Book
 ```bash
-curl -X PATCH http://localhost:3000/api/books/1/borrow
+curl -X PATCH http://192.168.56.103:3000/api/books/1/borrow
 ```
 
 ### 4. Return Book
 ```bash
-curl -X PATCH http://localhost:3000/api/books/1/return
+curl -X PATCH http://192.168.56.103:3000/api/books/1/return
 ```
 
 ### 5. Delete Book
 ```bash
-curl -X DELETE http://localhost:3000/api/books/1
+curl -X DELETE http://192.168.56.103:3000/api/books/1
 ```

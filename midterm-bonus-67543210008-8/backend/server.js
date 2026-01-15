@@ -22,7 +22,7 @@ const server = app.listen(PORT, '0.0.0.0', () => {
     console.log(`
 ╔═══════════════════════════════════════════════════╗
 ║  Library Management System API (Server)           ║
-║  Server running on http://172.26.192.162:${PORT}     ║
+║  Server running on http://192.168.56.103:${PORT}     ║
 ║  API: http://localhost:${PORT}/api/books             ║
 ╚═══════════════════════════════════════════════════╝
     `);
